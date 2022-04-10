@@ -4,5 +4,5 @@ To run the real-time demo use the following command:
 python3 -u CGL_test_realtime.py --cfg config/cglncgl_ade20k-hrnetv2_medium.yaml
 
 NOTE:
-For any installation issue refer to the original repositories.
+For any installation issue, refer:
 https://github.com/CSAILVision/semantic-segmentation-pytorch
