@@ -50,6 +50,17 @@ https://github.com/CSAILVision/semantic-segmentation-pytorch
 
 If you find the code or pre-trained models useful, please cite the following papers:
 
+Saha, Binoy, and Sukhendu Das. "Catch Me if You Can: A Novel Task for Detection of Covert Geo-Locations (CGL)." arXiv preprint arXiv:2202.02567 (2022). [paper has been accepted for publication at ICVGIP'21 WCVA]
+
+```
+@article{saha2022catch,
+  title={Catch Me if You Can: A Novel Task for Detection of Covert Geo-Locations (CGL)},
+  author={Saha, Binoy and Das, Sukhendu},
+  journal={arXiv preprint arXiv:2202.02567},
+  year={2022}
+}
+```
+
 Semantic Understanding of Scenes through ADE20K Dataset. B. Zhou, H. Zhao, X. Puig, T. Xiao, S. Fidler, A. Barriuso and A. Torralba. International Journal on Computer Vision (IJCV), 2018. (https://arxiv.org/pdf/1608.05442.pdf)
 
 ```
