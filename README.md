@@ -49,8 +49,7 @@ detection dataset. Architecture of the decoder (C1) is same as CGLSB
 
 ![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Quantative_Results_Table_1.jpg?raw=true "Title")
 
-Performance of the proposed CGL segmentation model, with different en-
-coders.
+Performance of the proposed CGL segmentation model, with different encoders.
 
 ![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Quantative_Results_Table_2.jpg?raw=true "Title")
 
