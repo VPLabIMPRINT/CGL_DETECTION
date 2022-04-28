@@ -42,6 +42,22 @@ To run the real-time demo use the following command:
 python3 -u CGL_test_realtime.py --cfg config/cglncgl_ade20k-hrnetv2_medium.yaml
 ```
 
+## Quantative Results
+Table 1. Performance of existing object detection and segmentation models when
+used for CGL detection. All models were trained from scratch on the proposed CGL
+detection dataset. Architecture of the decoder (C1) is same as CGLSB
+
+![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Quantative_Results_Table_1.jpg?raw=true "Title")
+
+Table 2. Performance of the proposed CGL segmentation model, with different en-
+coders.
+
+![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Quantative_Results_Table_2.jpg?raw=true "Title")
+
+## Qualitative Results
+
+![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Model_qualitative_result.jpg?raw=true "Title")
+
 ## Note
 For any installation issue, refer:
 https://github.com/CSAILVision/semantic-segmentation-pytorch
