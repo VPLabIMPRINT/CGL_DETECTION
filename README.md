@@ -47,9 +47,12 @@ Performance of existing object detection and segmentation models when
 used for CGL detection. All models were trained from scratch on the proposed CGL
 detection dataset. Architecture of the decoder (C1) is same as CGLSB
 
-
+![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Quantative_Results_Table_1.jpg?raw=true "Title")
 
 Performance of the proposed CGL segmentation model, with different encoders.
+
+![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Quantative_Results_Table_2.jpg?raw=true "Title")
+
 
 
 ## Qualitative Results
