@@ -59,7 +59,7 @@ Performance of the proposed CGL segmentation model, with different encoders.
 ![Alt text](https://github.com/VPLabIMPRINT/CGL_DETECTION/blob/main/Model_qualitative_result.jpg?raw=true "Title")
 
 ## Demo Videos
-Link(https://drive.google.com/drive/folders/1OZDhHx1jGEkjrWOCAVyVOa2kPHyBFEyM?usp=sharing) to demo videos: 
+[Link](https://drive.google.com/drive/folders/1OZDhHx1jGEkjrWOCAVyVOa2kPHyBFEyM?usp=sharing) to demo videos: 
 
 ## Note
 For any installation issue, refer:
