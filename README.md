@@ -41,6 +41,7 @@ To run the real-time demo use the following command:
 ```sh
 python3 -u CGL_test_realtime.py --cfg config/cglncgl_ade20k-hrnetv2_medium.yaml
 ```
+Few test images are also provided in the root directory.
 
 ## Quantative Results
 Performance of existing object detection and segmentation models when
