@@ -41,7 +41,12 @@ To run the real-time demo use the following command:
 ```sh
 python3 -u CGL_test_realtime.py --cfg config/cglncgl_ade20k-hrnetv2_medium.yaml
 ```
-Few test images are also provided in the root directory.
+Few test sample images are also provided in the folder named "test_image_samples".
+To run the code for custom input, use the following command.
+```sh
+python3 -u CGL_test.py --imgs ./test_image_samples/ --gpu 1 --cfg config/cglncgl_ade20k-hrnetv2_medium.yaml --output output
+```
+Output will be stored in folder named "output".
 
 ## Quantative Results
 Performance of existing object detection and segmentation models when
