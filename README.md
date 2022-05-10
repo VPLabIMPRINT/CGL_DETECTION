@@ -8,7 +8,7 @@ Link to [ArXiv version of our CGL Detection Paper](https://arxiv.org/abs/2202.02
 # Installation & Preparation
 
 ## Prerequisites
-- This code has been tested on Ubuntu 16.04 and Ubuntu 18.04.
+- This code has been tested on Ubuntu 16.04 LTS and Ubuntu 18.04 LTS.
 - Python 3.6
 - Pytorch 1.10.2
 - Cuda 10.2
