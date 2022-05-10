@@ -12,6 +12,7 @@ Link to [ArXiv version of our CGL Detection Paper](https://arxiv.org/abs/2202.02
 - Python 3.6
 - Pytorch 1.10.2
 - Cuda 10.2
+- Other dependencies: numpy, scipy, opencv, yacs, tqdm 
 
 ## Installation
 
