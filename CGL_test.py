@@ -21,7 +21,7 @@ from config import cfg
 import time 
 import cv2
 
-colors = loadmat('data/color150.mat')['colors']
+colors = loadmat('data/color_cgl_realtime.mat')['colors']
 # colors = loadmat('data/color150.mat')['colors']
 names = {}
 with open('data/object150_info.csv') as f:
