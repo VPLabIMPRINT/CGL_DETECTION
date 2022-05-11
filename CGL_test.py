@@ -37,12 +37,12 @@ def visualize_result(data, pred, cfg):
     pred = np.int32(pred)
     pixs = pred.size
     uniques, counts = np.unique(pred, return_counts=True)
-    print("Predictions in [{}]:".format(info))
-    for idx in np.argsort(counts)[::-1]:
-        name = names[uniques[idx] + 1]
-        ratio = counts[idx] / pixs * 100
-        if ratio > 0.1:
-            print("  {}: {:.2f}%".format(name, ratio))
+    #print("Predictions in [{}]:".format(info))
+    #for idx in np.argsort(counts)[::-1]:
+        #name = names[uniques[idx] + 1]
+        #ratio = counts[idx] / pixs * 100
+        #if ratio > 0.1:
+            #print("  {}: {:.2f}%".format(name, ratio))
 
     pred_color = colorEncode(pred, colors).astype(np.uint8)
     pred_color = np.where(pred_color == 120, 0, pred_color)
