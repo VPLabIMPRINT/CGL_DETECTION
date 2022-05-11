@@ -38,6 +38,11 @@ conda activate CGL
 
 ```
 
+## Model weights
+Download following model weights and place it into appropriate folder.
+
+Download weights from [here](https://drive.google.com/drive/folders/1_kPw58HI49mSrTUQpCu4z1mXDtrAjK9i?usp=sharing) and place it into [this](https://github.com/VPLabIMPRINT/CGL_DETECTION/tree/main/ckpt/cglncgl_ade20k-hrnetv2-c1-new_data-medium-novelty) folder.
+
 ## Running Demo
 To run the real-time demo use the following command:
 ```sh
