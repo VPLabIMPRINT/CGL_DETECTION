@@ -21,8 +21,8 @@ from config import cfg
 import time 
 import cv2
 
-colors = loadmat('data/color_cgl_realtime.mat')['colors']
-# colors = loadmat('data/color150.mat')['colors']
+colors = loadmat('data/color150.mat')['colors']
+
 names = {}
 with open('data/object150_info.csv') as f:
     reader = csv.reader(f)
@@ -37,32 +37,23 @@ def visualize_result(data, pred, cfg):
     pred = np.int32(pred)
     pixs = pred.size
     uniques, counts = np.unique(pred, return_counts=True)
-    #print("Predictions in [{}]:".format(info))
-    #for idx in np.argsort(counts)[::-1]:
-        #name = names[uniques[idx] + 1]
-        #ratio = counts[idx] / pixs * 100
-        #if ratio > 0.1:
-            #print("  {}: {:.2f}%".format(name, ratio))
+    print("Predictions in [{}]:".format(info))
+    for idx in np.argsort(counts)[::-1]:
+        name = names[uniques[idx] + 1]
+        ratio = counts[idx] / pixs * 100
+        if ratio > 0.1:
+            print("  {}: {:.2f}%".format(name, ratio))
 
     pred_color = colorEncode(pred, colors).astype(np.uint8)
     pred_color = np.where(pred_color == 120, 0, pred_color)
     im_vis = cv2.addWeighted(img, 1, pred_color, 1, 0)
     
-    # cv2.imshow('Covert Geo-Location (CGL) Detection Demo',im_vis)
-    # cv2.waitKey(100)
     img_name = info.split('/')[-1]
     Image.fromarray(im_vis).save(
         os.path.join(args.output, img_name))
-    # Image.fromarray(im_vis).save(
-    #     os.path.join(cfg.TEST.result, img_name.replace('.jpg', '_comb.png')))
-    # Image.fromarray(img).save(
-        # os.path.join(cfg.TEST.result, img_name.replace('.jpg', '_overlaid.png')))
-
+    
 def test(segmentation_module, loader, gpu):
     segmentation_module.eval()
-    # cv2.namedWindow("Covert Geo-Location (CGL) Detection Demo",0)
-    # cv2.resizeWindow("Covert Geo-Location (CGL) Detection Demo", int(1920/2), int(1080/2))
-    # cv2.moveWindow("Covert Geo-Location (CGL) Detection Demo", 1000, 100)
     pbar = tqdm(total=len(loader))
     for batch_data in loader:
         # process data
@@ -76,18 +67,23 @@ def test(segmentation_module, loader, gpu):
         start_time = time.time()
         with torch.no_grad():
             scores = torch.zeros(1, cfg.DATASET.num_class, segSize[0], segSize[1])
-            scores = async_copy_to(scores, gpu)
+            if gpu != -1:
+                scores = async_copy_to(scores, gpu)
 
             for img in img_resized_list:
                 feed_dict = batch_data.copy()
                 feed_dict['img_data'] = img
                 del feed_dict['img_ori']
                 del feed_dict['info']
-                feed_dict = async_copy_to(feed_dict, gpu)
+                if gpu != -1:
+                    feed_dict = async_copy_to(feed_dict, gpu)
 
                 # forward pass
-                pred_tmp = segmentation_module(feed_dict, segSize=segSize)
-                scores = scores + pred_tmp / len(cfg.DATASET.imgSizes)
+                pred_tmp = segmentation_module(feed_dict, gpu, segSize=segSize)
+                if gpu != -1:
+                    scores = scores + pred_tmp / len(cfg.DATASET.imgSizes)
+                else:
+                    scores = scores + pred_tmp.cpu() / len(cfg.DATASET.imgSizes)
 
             _, pred = torch.max(scores, dim=1)
             pred = as_numpy(pred.squeeze(0).cpu())
@@ -105,13 +101,12 @@ def test(segmentation_module, loader, gpu):
 
 
 def main(cfg, gpu):
-    # Comment this line for execution on cpu
-    torch.cuda.set_device(gpu)
+    if gpu == -1:
+        device = torch.device("cpu")
+    else:
+        device = torch.device("cuda:{}".format(gpu))
+        torch.cuda.set_device(gpu)
 
-    # Uncomment the following two lines for execution on cpu
-    # device = torch.device("cpu")
-    # gpu = device
-    
     # Network Builders
     net_encoder = ModelBuilder.build_encoder(
         arch=cfg.MODEL.arch_encoder.lower(),
@@ -140,8 +135,7 @@ def main(cfg, gpu):
         num_workers=5,
         drop_last=True)
 
-    # comment the following line to execute on cpu
-    segmentation_module.cuda()
+    segmentation_module.to(device)
 
     # Main loop
     start_time = time.time()
