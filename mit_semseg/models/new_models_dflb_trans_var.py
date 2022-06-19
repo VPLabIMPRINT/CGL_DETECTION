@@ -28,7 +28,7 @@ class SegmentationModule(SegmentationModuleBase):
         self.crit = crit
         self.deep_sup_scale = deep_sup_scale
 
-    def forward(self, feed_dict, *, segSize=None):
+    def forward(self, feed_dict, gpu, *, segSize=None):
       
 
         # training
@@ -37,13 +37,22 @@ class SegmentationModule(SegmentationModuleBase):
             feed_dict = feed_dict[0]
             
             if self.deep_sup_scale is not None: # use deep supervision technique
-                en_out = self.encoder(feed_dict['img_data'].cuda(), return_feature_maps=True)
+                if gpu != -1:
+                    en_out = self.encoder(feed_dict['img_data'].cuda(), return_feature_maps=True)
+                else:
+                    en_out = self.encoder(feed_dict['img_data'], return_feature_maps=True)
+
                 (pred, pred_deepsup) = self.decoder(en_out)
                 
             else:
                 
-                en_out = self.encoder(feed_dict['img_data'].cuda(), return_feature_maps=True)
-                en_out_trans = torch.transpose(self.encoder(torch.transpose(feed_dict['img_data'], 2, 3).cuda(), return_feature_maps=True)[-1],2,3)
+                if gpu != -1:
+                    en_out = self.encoder(feed_dict['img_data'].cuda(), return_feature_maps=True)
+                    en_out_trans = torch.transpose(self.encoder(torch.transpose(feed_dict['img_data'], 2, 3).cuda(), return_feature_maps=True)[-1],2,3)
+                else:
+                    en_out = self.encoder(feed_dict['img_data'], return_feature_maps=True)
+                    en_out_trans = torch.transpose(self.encoder(torch.transpose(feed_dict['img_data'], 2, 3), return_feature_maps=True)[-1],2,3)
+                
                 # en_out_pass = en_out[-1].clone()
                 en_out[-1] -= en_out[-1].min(1, keepdim=True)[0]
                 en_out[-1] /= en_out[-1].max(1, keepdim=True)[0]
@@ -51,35 +60,45 @@ class SegmentationModule(SegmentationModuleBase):
                 en_out_trans /= en_out_trans.max(1, keepdim=True)[0]
                 
                 
-                pred, feat = self.decoder(en_out[-1])
-                pred1 = self.decoder1(en_out[-1],feat)
+                pred, _, feat = self.decoder(en_out)
+                # print(pred.shape)
+                # print(feat.shape)
+                # input()
+                pred1, _ = self.decoder1(en_out,feat)
                 
-                mean_features_cgl = torch.var(en_out[-1] * pred1[:,1:2,:,:],dim=(2,3))
-                mean_features_noncgl = torch.var(en_out[-1] * pred1[:,0:1,:,:],dim=(2,3))
+                mean_features_cgl = torch.var(en_out * pred1[:,1:2,:,:],dim=(2,3))
+                mean_features_noncgl = torch.var(en_out * pred1[:,0:1,:,:],dim=(2,3))
                 
-            # print(self.crit(pred1, feed_dict['seg_label'].cuda()))
-            # print(self.crit(pred,torch.clamp(feed_dict['seg_label'].cuda() + feed_dict['depth'].cuda(),max=1)))
-            # print(torch.mean(mean_features_cgl))
-            # print(torch.mean(mean_features_noncgl))
-            # input()
-            loss = self.crit(pred1, feed_dict['seg_label'].cuda()) + 0.001 * torch.mean(torch.pow(en_out[-1] - en_out_trans,2)) + 0.001 *  torch.mean(mean_features_cgl) + 0.001 * torch.mean(mean_features_noncgl)
-            loss += self.crit(pred,torch.clamp(feed_dict['seg_label'].cuda() + feed_dict['depth'].cuda(),max=1))
-            # loss = loss / 4
-            # print(self.crit(pred1, feed_dict['seg_label'].cuda()))
-            # print(torch.mean(torch.pow(en_out[-1] - en_out_trans,2)))
-            # print(torch.mean(mean_features_cgl) + torch.mean(mean_features_noncgl))
-            # print(self.crit(pred,torch.clamp(feed_dict['seg_label'].cuda() + feed_dict['depth'].cuda(),max=1)))
-            # print()
+            if gpu != -1:
+                loss = self.crit(pred1, feed_dict['seg_label'].cuda()) + 0.001 * torch.mean(torch.pow(en_out[-1] - en_out_trans,2)) + 0.001 *  torch.mean(mean_features_cgl) + 0.001 * torch.mean(mean_features_noncgl)
+                loss += self.crit(pred,torch.clamp(feed_dict['seg_label'].cuda() + feed_dict['depth'].cuda(),max=1))
+            else:
+                loss = self.crit(pred1, feed_dict['seg_label']) + 0.001 * torch.mean(torch.pow(en_out[-1] - en_out_trans,2)) + 0.001 *  torch.mean(mean_features_cgl) + 0.001 * torch.mean(mean_features_noncgl)
+                loss += self.crit(pred,torch.clamp(feed_dict['seg_label'] + feed_dict['depth'],max=1))
+                
             if self.deep_sup_scale is not None:
-                loss_deepsup = self.crit(pred_deepsup, feed_dict['seg_label'].cuda())
+                if gpu != -1:
+                    loss_deepsup = self.crit(pred_deepsup, feed_dict['seg_label'].cuda())
+                else:
+                    loss_deepsup = self.crit(pred_deepsup, feed_dict['seg_label'])
+
                 loss += loss_deepsup
-                
-            acc = self.pixel_acc(pred1, feed_dict['seg_label'].cuda())
+
+            if gpu != -1:    
+                acc = self.pixel_acc(pred1, feed_dict['seg_label'].cuda())
+            else:
+                acc = self.pixel_acc(pred1, feed_dict['seg_label'])
+
             return loss, acc
         
         # inference
         else:
-            en_out = self.encoder(feed_dict['img_data'].cuda(), return_feature_maps=True)
+            
+            if gpu != -1:
+                en_out = self.encoder(feed_dict['img_data'].cuda(), return_feature_maps=True)
+            else:
+                en_out = self.encoder(feed_dict['img_data'], return_feature_maps=True)
+
             en_out[-1] -= en_out[-1].min(1, keepdim=True)[0]
             en_out[-1] /= en_out[-1].max(1, keepdim=True)[0]
             pred,feat = self.decoder(en_out[-1], segSize=segSize)
@@ -183,7 +202,11 @@ class ModelBuilder:
                 fc_dim=fc_dim,
                 use_softmax=use_softmax)
         elif arch == 'ppm_deepsup':
-            net_decoder = PPMDeepsup(
+            net_decoder1 = PPMDeepsup(
+                num_class=num_cls,
+                fc_dim=fc_dim,
+                use_softmax=use_softmax)
+            net_decoder = PPMDeepsupMod(
                 num_class=num_cls,
                 fc_dim=fc_dim,
                 use_softmax=use_softmax)
@@ -613,7 +636,9 @@ class PPMDeepsup(nn.Module):
         self.conv_last_deepsup = nn.Conv2d(fc_dim // 4, num_class, 1, 1, 0)
         self.dropout_deepsup = nn.Dropout2d(0.1)
 
-    def forward(self, conv_out, segSize=None):
+    def forward(self, conv_out, attn, segSize=None):
+        print(type(conv_out))
+        print(type(attn))
         conv5 = conv_out[-1]
 
         input_size = conv5.size()
@@ -626,6 +651,7 @@ class PPMDeepsup(nn.Module):
         ppm_out = torch.cat(ppm_out, 1)
 
         x = self.conv_last(ppm_out)
+        x = x * attn
 
         if self.use_softmax:  # is True during inference
             x = nn.functional.interpolate(
@@ -643,6 +669,68 @@ class PPMDeepsup(nn.Module):
         _ = nn.functional.log_softmax(_, dim=1)
 
         return (x, _)
+
+# pyramid pooling modified
+class PPMDeepsupMod(nn.Module):
+    def __init__(self, num_class=150, fc_dim=4096,
+                 use_softmax=False, pool_scales=(1, 2, 3, 6)):
+        super(PPMDeepsupMod, self).__init__()
+        self.use_softmax = use_softmax
+
+        self.ppm = []
+        for scale in pool_scales:
+            self.ppm.append(nn.Sequential(
+                nn.AdaptiveAvgPool2d(scale),
+                nn.Conv2d(fc_dim, 512, kernel_size=1, bias=False),
+                BatchNorm2d(512),
+                nn.ReLU(inplace=True)
+            ))
+        self.ppm = nn.ModuleList(self.ppm)
+        self.cbr_deepsup = conv3x3_bn_relu(fc_dim // 2, fc_dim // 4, 1)
+
+        self.conv_last = nn.Sequential(
+            nn.Conv2d(fc_dim+len(pool_scales)*512, 512,
+                      kernel_size=3, padding=1, bias=False),
+            BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(0.1),
+            nn.Conv2d(512, num_class, kernel_size=1)
+        )
+        self.conv_last_deepsup = nn.Conv2d(fc_dim // 4, num_class, 1, 1, 0)
+        self.dropout_deepsup = nn.Dropout2d(0.1)
+
+    def forward(self, conv_out, segSize=None):
+        conv5 = conv_out[-1]
+
+        input_size = conv5.size()
+        ppm_out = [conv5]
+        # print(conv5.shape)
+        # input()
+        for pool_scale in self.ppm:
+            ppm_out.append(nn.functional.interpolate(
+                pool_scale(conv5),
+                (input_size[2], input_size[3]),
+                mode='bilinear', align_corners=False))
+        ppm_out1 = torch.cat(ppm_out, 1)
+
+        x = self.conv_last(ppm_out1)
+
+        if self.use_softmax:  # is True during inference
+            x = nn.functional.interpolate(
+                x, size=segSize, mode='bilinear', align_corners=False)
+            x = nn.functional.softmax(x, dim=1)
+            return x
+
+        # deep sup
+        conv4 = conv_out[-2]
+        _ = self.cbr_deepsup(conv4)
+        _ = self.dropout_deepsup(_)
+        _ = self.conv_last_deepsup(_)
+
+        x = nn.functional.log_softmax(x, dim=1)
+        _ = nn.functional.log_softmax(_, dim=1)
+
+        return (x, _, ppm_out1)
 
 
 # upernet
